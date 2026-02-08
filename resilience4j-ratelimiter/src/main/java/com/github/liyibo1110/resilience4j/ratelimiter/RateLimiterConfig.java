@@ -20,7 +20,7 @@ public class RateLimiterConfig implements Serializable {
     private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
     private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
-    /** 核心参数：如果没有拿到许可，需要等待多久 */
+    /** 核心参数：如果没有可用的许可，会等待多久 */
     private final Duration timeoutDuration;
 
     /** 核心参数：每批许可涉及的时间范围周期，比如1秒，意思就是1秒内允许N个许可 */
