@@ -254,7 +254,7 @@ public interface CircuitBreaker {
         };
     }
 
-    static <T, R> CheckedFunction1<T, R> decorateFunction(CircuitBreaker cb, CheckedFunction1<T, R> function) {
+    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CircuitBreaker cb, CheckedFunction1<T, R> function) {
         return (T t) -> {
             cb.acquirePermission();
             final long start = cb.getCurrentTimestamp();
