@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.liyibo1110</groupId>
-    <artifactId>resilience4j-all</artifactId>
+    <artifactId>resilience4j-reactor</artifactId>
     <version>1.7.1</version>
 
     <properties>
@@ -51,9 +51,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.liyibo1110</groupId>
-            <artifactId>resilience4j-cache</artifactId>
-            <version>1.7.1</version>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>3.4.6</version>
         </dependency>
 
     </dependencies>

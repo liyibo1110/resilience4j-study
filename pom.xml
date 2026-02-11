@@ -7,6 +7,10 @@
     <groupId>com.github.liyibo1110</groupId>
     <artifactId>resilience4j-study</artifactId>
     <version>1.7.1</version>
+    <packaging>pom</packaging>
+    <modules>
+        <module>resilience4j-spring</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

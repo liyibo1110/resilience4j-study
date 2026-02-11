@@ -40,12 +40,6 @@
 
         <dependency>
             <groupId>com.github.liyibo1110</groupId>
-            <artifactId>resilience4j-ratelimiter</artifactId>
-            <version>1.7.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.liyibo1110</groupId>
             <artifactId>resilience4j-timelimiter</artifactId>
             <version>1.7.1</version>
         </dependency>
