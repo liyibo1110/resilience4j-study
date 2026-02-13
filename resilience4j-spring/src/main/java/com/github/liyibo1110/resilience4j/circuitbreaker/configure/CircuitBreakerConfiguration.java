@@ -10,9 +10,14 @@ import com.github.liyibo1110.resilience4j.consumer.DefaultEventConsumerRegistry;
 import com.github.liyibo1110.resilience4j.consumer.EventConsumerRegistry;
 import com.github.liyibo1110.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import com.github.liyibo1110.resilience4j.core.registry.RegistryEventConsumer;
+import com.github.liyibo1110.resilience4j.fallback.FallbackDecorators;
+import com.github.liyibo1110.resilience4j.spelresolver.SpelResolver;
+import com.github.liyibo1110.resilience4j.utils.AspectJOnClasspathCondition;
+import com.github.liyibo1110.resilience4j.utils.ReactorOnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
@@ -62,19 +67,33 @@ public class CircuitBreakerConfiguration {
     }
 
     @Bean
+    @Conditional(value={AspectJOnClasspathCondition.class})
+    public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
+            @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+            FallbackDecorators fallbackDecorators, SpelResolver spelResolver) {
+        return new CircuitBreakerAspect(prop, circuitBreakerRegistry, circuitBreakerAspectExtList, fallbackDecorators, spelResolver);
+    }
+
+    @Bean
+    @Conditional(value={ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    public ReactorCircuitBreakerAspectExt reactorCircuitBreakerAspect() {
+        return new ReactorCircuitBreakerAspectExt();
+    }
+
+    @Bean
     public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
         return new DefaultEventConsumerRegistry<>();
     }
 
     CircuitBreakerRegistry createCircuitBreakerRegistry(
-            CircuitBreakerConfigurationProperties circuitBreakerProperties,
+            CircuitBreakerConfigurationProperties prop,
             RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
             CompositeCustomizer<CircuitBreakerConfigCustomizer> customizerMap) {
-        Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
+        Map<String, CircuitBreakerConfig> configs = prop.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> prop.createCircuitBreakerConfig(entry.getKey(), entry.getValue(), customizerMap)));
         return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer,
-                io.vavr.collection.HashMap.ofAll(circuitBreakerProperties.getTags()));
+                io.vavr.collection.HashMap.ofAll(prop.getTags()));
     }
 
     void initCircuitBreakerRegistry(CircuitBreakerRegistry registry,

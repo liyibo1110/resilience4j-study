@@ -17,7 +17,7 @@ import java.util.Map;
  * 2、建立异常 -> Method的映射关系。
  * 3、按照给定的异常，就近匹配到合适的fallback方法版本。
  * 要注意这个实例，是短生命周期组件，即每次被AOP拦截时才会产生，不是项目启动时就预先生成好一堆这种实例备用的，
- * 确切地说，是在AOP拦截过程中，代码进入了catch区域里才会生成FallbackMethod实例。
+ * 确切地说，是在AOP拦截过程中，每次都生成FallbackMethod实例（会走cache）。
  * @author liyibo
  * @date 2026-02-11 15:48
  */

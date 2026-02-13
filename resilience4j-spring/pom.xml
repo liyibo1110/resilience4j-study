@@ -27,6 +27,18 @@
         </dependency>
 
         <dependency>
+            <groupId>com.github.liyibo1110</groupId>
+            <artifactId>resilience4j-annotations</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.liyibo1110</groupId>
+            <artifactId>resilience4j-reactor</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
             <version>5.3.2</version>

@@ -1,0 +1,122 @@
+package com.github.liyibo1110.resilience4j.ratelimiter.configure;
+
+import com.github.liyibo1110.resilience4j.common.CompositeCustomizer;
+import com.github.liyibo1110.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
+import com.github.liyibo1110.resilience4j.consumer.DefaultEventConsumerRegistry;
+import com.github.liyibo1110.resilience4j.consumer.EventConsumerRegistry;
+import com.github.liyibo1110.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import com.github.liyibo1110.resilience4j.core.registry.RegistryEventConsumer;
+import com.github.liyibo1110.resilience4j.fallback.FallbackDecorators;
+import com.github.liyibo1110.resilience4j.ratelimiter.RateLimiter;
+import com.github.liyibo1110.resilience4j.ratelimiter.RateLimiterConfig;
+import com.github.liyibo1110.resilience4j.ratelimiter.RateLimiterRegistry;
+import com.github.liyibo1110.resilience4j.ratelimiter.event.RateLimiterEvent;
+import com.github.liyibo1110.resilience4j.spelresolver.SpelResolver;
+import com.github.liyibo1110.resilience4j.utils.AspectJOnClasspathCondition;
+import com.github.liyibo1110.resilience4j.utils.ReactorOnClasspathCondition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.lang.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+/**
+ * @author liyibo
+ * @date 2026-02-13 11:50
+ */
+@Configuration
+public class RateLimiterConfiguration {
+
+    @Bean
+    @Qualifier("compositeRateLimiterCustomizer")
+    public CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer(
+            @Nullable List<RateLimiterConfigCustomizer> configCustomizers) {
+        return new CompositeCustomizer<>(configCustomizers);
+    }
+
+    @Bean
+    public RateLimiterRegistry rateLimiterRegistry(
+            RateLimiterConfigurationProperties prop,
+            EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+            RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer,
+            @Qualifier("compositeRateLimiterCustomizer") CompositeCustomizer<RateLimiterConfigCustomizer> customizer) {
+        RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(prop,
+                rateLimiterRegistryEventConsumer, customizer);
+        registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry, prop);
+        prop.getInstances().forEach(
+                (name, properties) ->
+                        rateLimiterRegistry.rateLimiter(name, prop.createRateLimiterConfig(properties, customizer, name))
+        );
+        return rateLimiterRegistry;
+    }
+
+    @Bean
+    @Primary
+    public RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer(
+            Optional<List<RegistryEventConsumer<RateLimiter>>> optionalRegistryEventConsumers) {
+        return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
+    }
+
+    private RateLimiterRegistry createRateLimiterRegistry(
+            RateLimiterConfigurationProperties prop,
+            RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer,
+            CompositeCustomizer<RateLimiterConfigCustomizer> customizer) {
+        Map<String, RateLimiterConfig> configs = prop.getConfigs()
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> prop.createRateLimiterConfig(entry.getValue(), customizer, entry.getKey())));
+
+        return RateLimiterRegistry.of(configs, rateLimiterRegistryEventConsumer,
+                io.vavr.collection.HashMap.ofAll(prop.getTags()));
+    }
+
+    private void registerEventConsumer(RateLimiterRegistry rateLimiterRegistry,
+                                       EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry,
+                                       RateLimiterConfigurationProperties prop) {
+        rateLimiterRegistry.getEventPublisher()
+                .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), prop))
+                .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), prop));
+    }
+
+    private void registerEventConsumer(
+            EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry, RateLimiter rateLimiter,
+            RateLimiterConfigurationProperties prop) {
+        com.github.liyibo1110.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties limiterProperties = prop.getInstances()
+                .get(rateLimiter.getName());
+        if(limiterProperties != null && limiterProperties.getSubscribeForEvents() != null
+                && limiterProperties.getSubscribeForEvents()) {
+            rateLimiter.getEventPublisher().onEvent(
+                    eventConsumerRegistry.createEventConsumer(rateLimiter.getName(),
+                            limiterProperties.getEventConsumerBufferSize() != null
+                                    && limiterProperties.getEventConsumerBufferSize() != 0 ? limiterProperties
+                                    .getEventConsumerBufferSize() : 100));
+        }
+    }
+
+    @Bean
+    @Conditional(value={AspectJOnClasspathCondition.class})
+    public RateLimiterAspect rateLimiterAspect(
+            RateLimiterConfigurationProperties prop, RateLimiterRegistry rateLimiterRegistry,
+            @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+            FallbackDecorators fallbackDecorators, SpelResolver spelResolver) {
+        return new RateLimiterAspect(rateLimiterRegistry, prop, rateLimiterAspectExtList, fallbackDecorators, spelResolver);
+    }
+
+    @Bean
+    @Conditional(value={ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    public ReactorRateLimiterAspectExt reactorRateLimiterAspectExt() {
+        return new ReactorRateLimiterAspectExt();
+    }
+
+    @Bean
+    public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
+        return new DefaultEventConsumerRegistry<>();
+    }
+}
