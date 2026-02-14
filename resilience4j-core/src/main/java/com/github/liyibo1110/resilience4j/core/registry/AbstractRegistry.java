@@ -104,7 +104,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
         Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL);
         return this.entryMap.computeIfAbsent(name, k -> {
             E entry = supplier.get();
-            // 这里要通知add监听器
+            // 这里要通知add监听器（非常重要的调用点，涉及到micrometer的关键对接）
             this.eventProcessor.processEvent(new EntryAddedEvent<>(entry));
             return entry;
         });

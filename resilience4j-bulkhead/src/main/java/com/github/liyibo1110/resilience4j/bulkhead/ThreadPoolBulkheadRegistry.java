@@ -1,5 +1,6 @@
 package com.github.liyibo1110.resilience4j.bulkhead;
 
+import com.github.liyibo1110.resilience4j.bulkhead.internal.InMemoryThreadPoolBulkheadRegistry;
 import com.github.liyibo1110.resilience4j.core.Registry;
 import com.github.liyibo1110.resilience4j.core.RegistryStore;
 import com.github.liyibo1110.resilience4j.core.registry.RegistryEventConsumer;

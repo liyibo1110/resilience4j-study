@@ -9,7 +9,22 @@
     <version>1.7.1</version>
     <packaging>pom</packaging>
     <modules>
+        <module>resilience4j-all</module>
+        <module>resilience4j-annotations</module>
+        <module>resilience4j-bulkhead</module>
+        <module>resilience4j-cache</module>
+        <module>resilience4j-circuitbreaker</module>
+        <module>resilience4j-circularbuffer</module>
+        <module>resilience4j-consumer</module>
+        <module>resilience4j-core</module>
+        <module>resilience4j-framework-common</module>
+        <module>resilience4j-micrometer</module>
+        <module>resilience4j-ratelimiter</module>
+        <module>resilience4j-reactor</module>
+        <module>resilience4j-retry</module>
         <module>resilience4j-spring</module>
+        <module>resilience4j-spring-boot2</module>
+        <module>resilience4j-timelimiter</module>
     </modules>
 
     <properties>

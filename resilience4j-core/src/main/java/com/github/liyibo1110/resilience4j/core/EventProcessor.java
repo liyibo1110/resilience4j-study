@@ -27,7 +27,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
     final List<EventConsumer<T>> onEventConsumers = new CopyOnWriteArrayList<>();
 
     /**
-     * 按事件类型区分的监听器，key是Event对象对应的className，value是对应的消费者列表，通过registerConsumer方法来注册，只监听某类事件
+     * 按事件类型区分的监听器，key是Event对象对应的className，value是对应的消费者列表，通过registerConsumer方法来注册，只监听某类事件例如
      * 1、ERROR
      * 2、STATE_TRANSITION
      * 3、RETRY_ON_ERROR
